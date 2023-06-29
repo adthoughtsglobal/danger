@@ -1,44 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Real-time Location Tracking</title>
+  <title>Location Tracker</title>
+  <style>
+    #status {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Real-time Location Tracking</h1>
-  <button id="initializeButton">Initialize</button>
-  <button id="startButton" disabled>Start Tracking</button>
-  <button id="stopButton" disabled>Stop Tracking</button>
-
+  <h1>Location Tracker</h1>
+  <p id="status">Location: <span id="location">Unknown</span></p>
   <script>
-    let uniqueId = null;
+    navigator.geolocation.watchPosition(function(position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      document.getElementById('location').textContent = `Lat: ${latitude}, Lng: ${longitude}`;
 
-    // Generate a random ID
-    function generateUniqueId() {
-      return Math.random().toString(36).substr(2, 9);
-    }
-
-    // Initialize the tracking
-    document.getElementById('initializeButton').addEventListener('click', function() {
-      uniqueId = generateUniqueId();
-      document.getElementById('startButton').disabled = false;
-      document.getElementById('stopButton').disabled = false;
+      // Send location update to the service worker
+      navigator.serviceWorker.controller.postMessage({
+        type: 'locationUpdate',
+        latitude: latitude,
+        longitude: longitude
+      });
     });
-
-    // Register the service worker
+  </script>
+  <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
+      navigator.serviceWorker.register('/service-worker.js')
         .then(function(registration) {
           console.log('Service Worker registered with scope:', registration.scope);
-
-          // Listen for messages from the Service Worker
-          navigator.serviceWorker.addEventListener('message', function(event) {
-            if (event.data === 'triggerReceived') {
-              // Trigger received, send information to the server
-              const location = { uniqueId, latitude: 0, longitude: 0 }; // Replace with actual coordinates
-              navigator.serviceWorker.controller.postMessage(location);
-            }
-          });
-        }).catch(function(error) {
+        })
+        .catch(function(error) {
           console.error('Service Worker registration failed:', error);
         });
     }
