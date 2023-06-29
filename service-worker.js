@@ -37,6 +37,16 @@ socket.addEventListener('open', function() {
 
 socket.addEventListener('message', function(event) {
   console.log('WebSocket message received:', event.data);
+
+  // Check for trigger message
+  if (event.data === 'triggerMessage') {
+    // Send trigger received message to the client
+    self.clients.matchAll().then(function(clients) {
+      clients.forEach(function(client) {
+        client.postMessage('triggerReceived');
+      });
+    });
+  }
 });
 
 socket.addEventListener('close', function() {
@@ -45,4 +55,11 @@ socket.addEventListener('close', function() {
   setTimeout(function() {
     socket.connect();
   }, 5000);
+});
+
+// Receive message from client
+self.addEventListener('message', function(event) {
+  const location = event.data;
+  // Send location data to the server through the WebSocket
+  socket.send(JSON.stringify(location));
 });

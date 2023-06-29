@@ -4,7 +4,7 @@
   <title>Real-time Location Tracking</title>
 </head>
 <body>
-  <h1>Real-time Location Tracking Cool!</h1>
+  <h1>Real-time Location Tracking</h1>
   <button id="initializeButton">Initialize</button>
   <button id="startButton" disabled>Start Tracking</button>
   <button id="stopButton" disabled>Stop Tracking</button>
@@ -29,29 +29,19 @@
       navigator.serviceWorker.register('service-worker.js')
         .then(function(registration) {
           console.log('Service Worker registered with scope:', registration.scope);
+
+          // Listen for messages from the Service Worker
+          navigator.serviceWorker.addEventListener('message', function(event) {
+            if (event.data === 'triggerReceived') {
+              // Trigger received, send information to the server
+              const location = { uniqueId, latitude: 0, longitude: 0 }; // Replace with actual coordinates
+              navigator.serviceWorker.controller.postMessage(location);
+            }
+          });
         }).catch(function(error) {
           console.error('Service Worker registration failed:', error);
         });
     }
-
-    // Connect to the WebSocket
-    const socket = new WebSocket('wss://moo.adthoughtsglobal.repl.co');
-
-    // Start tracking location
-    document.getElementById('startButton').addEventListener('click', function() {
-      navigator.geolocation.watchPosition(function(position) {
-        const { latitude, longitude } = position.coords;
-        const location = { uniqueId, latitude, longitude };
-
-        // Send location data to the server through the WebSocket
-        socket.send(JSON.stringify(location));
-      });
-    });
-
-    // Stop tracking location
-    document.getElementById('stopButton').addEventListener('click', function() {
-      navigator.geolocation.clearWatch();
-    });
   </script>
 </body>
 </html>
