@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Page</title>
+  <style>
+    #locationList {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .locationItem {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Page</h1>
+  <h2>Locations:</h2>
+  <ul id="locationList"></ul>
+  <button id="triggerButton">Send Trigger</button>
+
+  <script>
+    const locationList = document.getElementById('locationList');
+
+    // Function to update the online status of a location
+    function updateOnlineStatus(locationId, isOnline) {
+      const locationItem = document.getElementById(locationId);
+      if (locationItem) {
+        const onlineStatus = locationItem.querySelector('.onlineStatus');
+        onlineStatus.textContent = isOnline ? 'Online' : 'Offline';
+      }
+    }
+
+    // Function to handle WebSocket messages
+    function handleMessage(event) {
+      const message = JSON.parse(event.data);
+      if (message.type === 'locationUpdate') {
+        const { id, latitude, longitude, isOnline } = message.payload;
+        const locationItem = document.getElementById(id);
+        if (locationItem) {
+          const coordinates = locationItem.querySelector('.coordinates');
+          coordinates.textContent = `Lat: ${latitude}, Lng: ${longitude}`;
+          updateOnlineStatus(id, isOnline);
+        } else {
+          const newLocationItem = document.createElement('li');
+          newLocationItem.setAttribute('id', id);
+          newLocationItem.classList.add('locationItem');
+
+          const locationName = document.createElement('span');
+          locationName.textContent = `ID: ${id}`;
+
+          const coordinates = document.createElement('span');
+          coordinates.classList.add('coordinates');
+          coordinates.textContent = `Lat: ${latitude}, Lng: ${longitude}`;
+
+          const onlineStatus = document.createElement('span');
+          onlineStatus.classList.add('onlineStatus');
+          onlineStatus.textContent = isOnline ? 'Online' : 'Offline';
+
+          newLocationItem.appendChild(locationName);
+          newLocationItem.appendChild(coordinates);
+          newLocationItem.appendChild(onlineStatus);
+
+          locationList.appendChild(newLocationItem);
+        }
+      }
+    }
+
+    // Send trigger message
+    document.getElementById('triggerButton').addEventListener('click', function() {
+      // Send trigger message to the WebSocket
+      socket.send('triggerMessage');
+    });
+
+    // WebSocket event listeners
+    const socket = new WebSocket('wss://moo.adthoughtsglobal.repl.co');
+    socket.addEventListener('open', function() {
+      console.log('WebSocket connection established');
+    });
+
+    socket.addEventListener('message', function(event) {
+      console.log('WebSocket message received:', event.data);
+      handleMessage(event);
+    });
+
+    socket.addEventListener('close', function() {
+      console.log('WebSocket connection closed');
+    });
+  </script>
+</body>
+</html>
