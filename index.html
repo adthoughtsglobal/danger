@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-time Location Tracking</title>
+</head>
+<body>
+  <h1>Real-time Location Tracking Cool!</h1>
+  <button id="initializeButton">Initialize</button>
+  <button id="startButton" disabled>Start Tracking</button>
+  <button id="stopButton" disabled>Stop Tracking</button>
+
+  <script>
+    let uniqueId = null;
+
+    // Generate a random ID
+    function generateUniqueId() {
+      return Math.random().toString(36).substr(2, 9);
+    }
+
+    // Initialize the tracking
+    document.getElementById('initializeButton').addEventListener('click', function() {
+      uniqueId = generateUniqueId();
+      document.getElementById('startButton').disabled = false;
+      document.getElementById('stopButton').disabled = false;
+    });
+
+    // Register the service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function(registration) {
+          console.log('Service Worker registered with scope:', registration.scope);
+        }).catch(function(error) {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+
+    // Connect to the WebSocket
+    const socket = new WebSocket('wss://moo.adthoughtsglobal.repl.co');
+
+    // Start tracking location
+    document.getElementById('startButton').addEventListener('click', function() {
+      navigator.geolocation.watchPosition(function(position) {
+        const { latitude, longitude } = position.coords;
+        const location = { uniqueId, latitude, longitude };
+
+        // Send location data to the server through the WebSocket
+        socket.send(JSON.stringify(location));
+      });
+    });
+
+    // Stop tracking location
+    document.getElementById('stopButton').addEventListener('click', function() {
+      navigator.geolocation.clearWatch();
+    });
+  </script>
+</body>
+</html>
