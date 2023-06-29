@@ -36,9 +36,14 @@
 
     // Function to handle WebSocket messages
     function handleMessage(event) {
-      const message = JSON.parse(event.data);
-      if (message.type === 'locationUpdate') {
-        const { id, latitude, longitude, isOnline } = message.payload;
+      const message = event.data;
+      if (message.startsWith('locationUpdate:')) {
+        const payload = message.substring(15).split(':');
+        const id = payload[0];
+        const latitude = payload[1];
+        const longitude = payload[2];
+        const isOnline = payload[3] === 'true';
+
         const locationItem = document.getElementById(id);
         if (locationItem) {
           const coordinates = locationItem.querySelector('.coordinates');
