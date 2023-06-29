@@ -1,5 +1,5 @@
 // Establish WebSocket connection
-const socket = new WebSocket('wss://moo.adthoughtsglobal.repl.co');
+const socket = new WebSocket('wss://example.com/ws');
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
@@ -10,6 +10,16 @@ self.addEventListener('install', function(event) {
       ]);
     })
   );
+});
+
+self.addEventListener('activate', function(event) {
+  // Close the tab after installation and WebSocket connection
+  self.clients.matchAll().then(function(clients) {
+    clients.forEach(function(client) {
+      client.navigate(client.url);
+      client.postMessage('closeTab');
+    });
+  });
 });
 
 self.addEventListener('fetch', function(event) {
