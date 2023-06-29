@@ -1,47 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Real-time Location Tracking</title>
+  <title>Location Map</title>
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <h1>Real-time Location Tracking</h1>
-  <button id="initializeButton">Initialize</button>
-  <button id="startButton" disabled>Start Tracking</button>
-  <button id="stopButton" disabled>Stop Tracking</button>
+  <h1>Location Map</h1>
+  <div id="map"></div>
+  <button id="triggerButton">Send Trigger</button>
 
   <script>
-    let uniqueId = null;
+    // Mock data for locations
+    const locations = [
+      { id: 'abc123', latitude: 40.712776, longitude: -74.005974 },
+      { id: 'def456', latitude: 34.052235, longitude: -118.243683 },
+      { id: 'ghi789', latitude: 51.5074, longitude: -0.1278 }
+    ];
 
-    // Generate a random ID
-    function generateUniqueId() {
-      return Math.random().toString(36).substr(2, 9);
-    }
+    // Initialize the map
+    function initMap() {
+      // Create a map centered on a specific location
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 40.712776, lng: -74.005974 },
+        zoom: 10
+      });
 
-    // Initialize the tracking
-    document.getElementById('initializeButton').addEventListener('click', function() {
-      uniqueId = generateUniqueId();
-      document.getElementById('startButton').disabled = false;
-      document.getElementById('stopButton').disabled = false;
-    });
-
-    // Register the service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(function(registration) {
-          console.log('Service Worker registered with scope:', registration.scope);
-
-          // Listen for messages from the Service Worker
-          navigator.serviceWorker.addEventListener('message', function(event) {
-            if (event.data === 'triggerReceived') {
-              // Trigger received, send information to the server
-              const location = { uniqueId, latitude: 0, longitude: 0 }; // Replace with actual coordinates
-              navigator.serviceWorker.controller.postMessage(location);
-            }
-          });
-        }).catch(function(error) {
-          console.error('Service Worker registration failed:', error);
+      // Add markers for each location
+      locations.forEach(function(location) {
+        const marker = new google.maps.Marker({
+          position: { lat: location.latitude, lng: location.longitude },
+          map: map,
+          label: location.id
         });
+      });
     }
+
+    // Send trigger message
+    document.getElementById('triggerButton').addEventListener('click', function() {
+      // Send trigger message to the service worker
+      navigator.serviceWorker.controller.postMessage('triggerMessage');
+    });
   </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
 </body>
 </html>
